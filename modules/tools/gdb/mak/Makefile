@@ -1,7 +1,6 @@
 ###############################################################################
 #
-# Copyright 2015, Mariano Cerdeiro
-# All rights reserved.
+# Copyright 2015, Juan Cecconi
 #
 # This file is part of CIAA Firmware.
 #
@@ -32,22 +31,14 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 ###############################################################################
-# Project Name: based on Project Path and used to define OSEK configuration file
-PROJECT_NAME               = $(lastword $(subst $(DS), , $(PROJECT_PATH)))
-# Project path
-# Defined $(PROJECT_PATH) in makefile.mine
-# source path
-$(PROJECT_NAME)_SRC_PATH  += $(PROJECT_PATH)$(DS)src
-# include path
-INC_FILES            += $(PROJECT_PATH)$(DS)inc
-# library source files
-SRC_FILES            += $(wildcard $($(PROJECT_NAME)_SRC_PATH)$(DS)*.c)
-# configuration for OSEK-OS
-OIL_FILES            += $(PROJECT_PATH)$(DS)etc$(DS)$(PROJECT_NAME).oil
-# Modules needed for this example
-MODS ?= modules$(DS)posix           \
-        modules$(DS)ciaak           \
-        modules$(DS)drivers         \
-        modules$(DS)rtos            \
-        modules$(DS)libs
+# gdb path
+GDB_PATH 		   = $(ROOT_DIR)$(DS)modules$(DS)tools$(DS)gdb
 
+# gdb bin file
+GDB_BIN 		   = arm-none-eabi-gdb
+
+# gdb Flag
+GDB_FLAGS 		   = $(LD_TARGET) -ex "target remote localhost:3333"
+
+# gdb dependent makefile
+-include $(GDB_PATH)$(DS)mak$(DS)$(ARCH)$(DS)$(CPUTYPE)$(DS)$(CPU)$(DS)Makefile
