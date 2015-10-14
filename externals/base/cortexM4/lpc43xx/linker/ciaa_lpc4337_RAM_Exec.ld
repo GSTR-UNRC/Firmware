@@ -36,126 +36,33 @@ INCLUDE "externals/base/cortexM4/lpc43xx/linker/ciaa_lpc4337_mem.ld"
 ENTRY(ResetISR)
 
 SECTIONS
-{
-   /* Main Text Flash Section */    
-   .text_Flash : ALIGN(4)
-   {
-      FILL(0xFF);
-
-      LONG(_vStackTop);
-      LONG(ResetISR | 1);   /* 1 */
-      LONG(0x0);            /* 2 */
-      LONG(0x0);            /* 3 */        
-      LONG(0x0);            /* 4 */
-      LONG(0x0);            /* 5 */
-      LONG(0x0);            /* 6 */
-      LONG(0x0);            /* 7 */
-      LONG(0x0);            /* 8 */
-      LONG(0x0);            /* 9 */
-      LONG(0x0);            /* 10 */
-      LONG(0x0);            /* 11 */
-      LONG(0x0);            /* 12 */
-      LONG(0x0);            /* 13 */
-      LONG(0x0);            /* 14 */
-      LONG(0x0);            /* 15 */
-      LONG(0x0);            /* 16 */
-      LONG(0x0);            /* 17 */
-      LONG(0x0);            /* 18 */        
-      LONG(0x0);            /* 19 */
-      LONG(0x0);            /* 20 */
-      LONG(0x0);            /* 21 */
-      LONG(0x0);            /* 22 */
-      LONG(0x0);            /* 23 */
-      LONG(0x0);            /* 24 */
-      LONG(0x0);            /* 25 */
-      LONG(0x0);            /* 26 */
-      LONG(0x0);            /* 28 */
-      LONG(0x0);            /* 29 */        
-      LONG(0x0);            /* 30 */
-      LONG(0x0);            /* 31 */
-      LONG(0x0);            /* 32 */
-      LONG(0x0);            /* 33 */
-      LONG(0x0);            /* 34 */
-      LONG(0x0);            /* 35 */
-      LONG(0x0);            /* 36 */
-      LONG(0x0);            /* 37 */
-      LONG(0x0);            /* 38 */
-      LONG(0x0);            /* 39 */        
-      LONG(0x0);            /* 40 */
-      LONG(0x0);            /* 41 */
-      LONG(0x0);            /* 42 */
-      LONG(0x0);            /* 43 */
-      LONG(0x0);            /* 44 */
-      LONG(0x0);            /* 45 */
-      LONG(0x0);            /* 46 */
-      LONG(0x0);            /* 47 */
-      LONG(0x0);            /* 48 */
-      LONG(0x0);            /* 49 */        
-      LONG(0x0);            /* 50 */
-      LONG(0x0);            /* 51 */
-      LONG(0x0);            /* 52 */
-      LONG(0x0);            /* 53 */
-      LONG(0x0);            /* 54 */
-      LONG(0x0);            /* 55 */
-      LONG(0x0);            /* 56 */
-      LONG(0x0);            /* 57 */
-      LONG(0x0);            /* 58 */
-      LONG(0x0);            /* 59 */        
-      LONG(0x0);            /* 60 */
-      LONG(0x0);            /* 61 */
-      LONG(0x0);            /* 62 */
-      LONG(0x0);            /* 63 */
-      LONG(0x0);            /* 64 */
-      LONG(0x0);            /* 65 */
-      LONG(0x0);            /* 66 */
-      LONG(0x0);            /* 67 */
-      LONG(0x0);            /* 68 */
-      LONG(0x0);            /* 69 */
-
-      *(.after_vectors*);
-        
-      /* CRP (Code Read Protect) */
-      . = 0x000002FC;
-      PROVIDE(__CRP_WORD_START__ = .);
-      KEEP(*(.crp));
-      PROVIDE(__CRP_WORD_END__ = .);
-      ASSERT(!(__CRP_WORD_START__ == __CRP_WORD_END__), "Linker CRP Enabled, but no CRP_WORD provided within application");
-      /* End of CRP (Code Read Protect) */
-
-      /* StartUp Main Code */
-      chip*(.text*);
-      clock*(.text*);
-      sysinit*(.text*);
-      core_cm4*(.text*);
-                      
-   } >MFlashA512
-    
-   /* Code and read-only/const data for StartUp, address: 0x10080000 */
-   .text_RAM_StartUp : ALIGN(4)    
+{ 
+   /* Code and read-only/const data, address: 0x10080000 */
+   .text_RAM : ALIGN(4)    
    {
       FILL(0x00);
       /* RAM Vector Table  must be at the beginning */
       g_pfnVectors = ABSOLUTE(.);
       KEEP(*(.isr_vector));
 
-      /* StartUp Reset Code */
+      /* StartUp Reset Code, must be always at the same address */
       *(.text.ResetISR);
+      *(.after_vectors*);
 
-      /* read-only/const data for StartUp, constant address */
-      chip*(.rodata* .constdata*);
-      clock*(.rodata* .constdata*);
-      sysinit*(.rodata* .constdata*);
-      core_cm4*(.rodata* .constdata*);
+      /* StartUp and App Code */
+      *(.text*);
+      
+      /* StartUp and App read-oly/const data */
+      *(.rodata .rodata.* .constdata .constdata.*);
       
    } > RamLoc40
 
-   /* Initialized StartUp Data */
-   /* Main DATA section for StartUp (RamLoc40) */
-   .data_StartUp : ALIGN(4)
+   /* Initialized Data */
+   /* Main DATA section for StartUp and App (RamLoc40) */
+   .data_RAM : ALIGN(4)
    {
       FILL(0x00);
-      . = ALIGN(0x200);
-      _data_StartUp = .;
+      _data = .;
       
       /* Global Section Table */
       __section_table_start = .;  
@@ -171,10 +78,10 @@ SECTIONS
       __section_table_end = .;
       /* End of Global Section Table */
 
-      chip*(.data*);
-      clock*(.data*);
-      sysinit*(.data*);
-      core_cm4*(.data*);
+      /* StartUp and App Initialized data */
+      *(.data*);
+      
+      _edata = .;
 
    } > RamLoc40
 
@@ -182,37 +89,15 @@ SECTIONS
    .bss : ALIGN(4)
    {
       FILL(0x00);
-	   . = ALIGN(0x200);
       _bss = .;
-
-      chip*(.bss* COMMON);
-      clock*(.bss* COMMON);
-      sysinit*(.bss* COMMON);
-      core_cm4*(.bss* COMMON);
 
       *(COMMON);
       *(.bss*);
+      
       _ebss = .;
     
     } > RamLoc40
  
-   /* Initialized App Data */
-   /* Main DATA section for App (RamLoc40) */
-   .data_App : ALIGN(4)
-   {
-      FILL(0x00);
-
-      _data_App = .;
-       *(.data*);
-       
-   } > RamLoc40
-
-   .text_RAM_App : ALIGN(4)    
-   {
-      *(.text*);
-      *(.rodata .rodata.* .constdata .constdata.*);
-   } > RamLoc40
-
    PROVIDE(_pvHeapStart = .);
    PROVIDE(_vStackTop = __top_RamLoc40 - 0);
 }
